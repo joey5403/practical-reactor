@@ -36,7 +36,7 @@ public class c4_LifecycleHooks extends LifecycleHooksBase {
     public void no_subscription_no_gains() {
         CopyOnWriteArrayList<String> hooksTriggered = new CopyOnWriteArrayList<>();
 
-        Flux<Integer> temperatureFlux = room_temperature_service()
+        Flux<Integer> temperatureFlux = room_temperature_service().doFirst(() -> hooksTriggered.add("subscribe"))
                 //todo: change this line only
                 ;
 
@@ -55,7 +55,9 @@ public class c4_LifecycleHooks extends LifecycleHooksBase {
     public void be_there_early() {
         CopyOnWriteArrayList<String> hooksTriggered = new CopyOnWriteArrayList<>();
 
-        Flux<Integer> temperatureFlux = room_temperature_service()
+        Flux<Integer> temperatureFlux = room_temperature_service().doFirst(
+                ()-> hooksTriggered.add("before subscribe")
+        )
                 //todo: change this line only
                 ;
 
@@ -75,6 +77,7 @@ public class c4_LifecycleHooks extends LifecycleHooksBase {
         AtomicInteger counter = new AtomicInteger(0);
 
         Flux<Integer> temperatureFlux = room_temperature_service()
+                .doOnNext(it->{System.out.println(counter.addAndGet(1));})
                 //todo: change this line only
                 ;
 
@@ -94,6 +97,7 @@ public class c4_LifecycleHooks extends LifecycleHooksBase {
         AtomicBoolean completed = new AtomicBoolean(false);
 
         Flux<Integer> temperatureFlux = room_temperature_service()
+                .doOnComplete(()->completed.getAndSet(true))
                 //todo: change this line only
                 ;
 
@@ -113,6 +117,7 @@ public class c4_LifecycleHooks extends LifecycleHooksBase {
         AtomicBoolean canceled = new AtomicBoolean(false);
 
         Flux<Integer> temperatureFlux = room_temperature_service()
+                .doOnCancel(()->canceled.set(true))
                 //todo: change this line only
                 ;
 
@@ -133,6 +138,7 @@ public class c4_LifecycleHooks extends LifecycleHooksBase {
         AtomicInteger hooksTriggeredCounter = new AtomicInteger(0);
 
         Flux<Integer> temperatureFlux = room_temperature_service()
+                .doOnTerminate(()->hooksTriggeredCounter.getAndAdd(1))
                 //todo: change this line only
                 ;
 
@@ -161,6 +167,7 @@ public class c4_LifecycleHooks extends LifecycleHooksBase {
         AtomicInteger hooksTriggeredCounter = new AtomicInteger(0);
 
         Flux<Integer> temperatureFlux = room_temperature_service()
+                .doFinally(signal->hooksTriggeredCounter.getAndAdd(1))
                 //todo: change this line only
                 ;
 
@@ -193,7 +200,7 @@ public class c4_LifecycleHooks extends LifecycleHooksBase {
                                  .doFirst(() -> sideEffects.add("one"));
 
         List<String> orderOfExecution =
-                Arrays.asList("todo", "todo", "todo"); //todo: change this line only
+                Arrays.asList("one", "three", "two"); //todo: change this line only
 
         StepVerifier.create(just)
                     .expectNext(true)
@@ -216,7 +223,17 @@ public class c4_LifecycleHooks extends LifecycleHooksBase {
     public void one_to_rule_them_all() {
         CopyOnWriteArrayList<String> signals = new CopyOnWriteArrayList<>();
 
-        Flux<Integer> flux = Flux.just(1, 2, 3)
+        Flux<Integer> flux = Flux.just(1, 2, 3).doOnEach(
+                signal -> {
+                    if (signal.isOnNext()) {
+                        signals.add("ON_NEXT");
+                    } else if (signal.isOnComplete()) {
+                        signals.add("ON_COMPLETE");
+                    } else if (signal.isOnError()) {
+                        signals.add("ON_ERROR");
+                    }
+                }
+        )
                 //todo: change this line only
                 ;
 
