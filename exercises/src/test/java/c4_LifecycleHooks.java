@@ -167,7 +167,7 @@ public class c4_LifecycleHooks extends LifecycleHooksBase {
         AtomicInteger hooksTriggeredCounter = new AtomicInteger(0);
 
         Flux<Integer> temperatureFlux = room_temperature_service()
-                .doFinally(signal->hooksTriggeredCounter.getAndAdd(1))
+                .doFinally(signal->hooksTriggeredCounter.incrementAndGet())
                 //todo: change this line only
                 ;
 
